@@ -7,6 +7,7 @@
 
 import os
 import signal
+import subprocess
 
 from vyatta import configd
 
@@ -16,10 +17,8 @@ RSYSLOG_PID = '/var/run/rsyslogd.pid'
 
 def signal_rsyslogd_reread():
     try:
-        pidfile = open(RSYSLOG_PID, 'r')
-        pid = pidfile.read()
-        pidfile.close()
-        os.kill(pid, signal.SIGHUP)
+        #rsyslog needs a restart to reload configuration change
+        subprocess.call(["service", "rsyslog", "restart"], shell=False)
     except:
         pass
 

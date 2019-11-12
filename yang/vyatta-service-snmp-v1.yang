@@ -60,6 +60,11 @@ module vyatta-service-snmp-v1 {
 
 		 SNMP configuration";
 
+	revision 2019-10-24 {
+		description "Add configd:secret to snmp community strings.
+					 Normalise network prefixes.";
+	}
+
 	revision 2019-04-24 {
 		description "Combine the two validation scripts into one script.";
 	}
@@ -152,6 +157,7 @@ module vyatta-service-snmp-v1 {
 				leaf community {
 					type string;
 					configd:help "Community used when sending trap information";
+					configd:secret true;
 				}
 				leaf port {
 					type uint32 {
@@ -189,6 +195,7 @@ module vyatta-service-snmp-v1 {
 			list community {
 				configd:help "Community name [REQUIRED]";
 				key "tagnode";
+
 				leaf tagnode {
 					type string {
 						pattern '[^%]+' {
@@ -196,6 +203,7 @@ module vyatta-service-snmp-v1 {
 						}
 					}
 					configd:help "Community name [REQUIRED]";
+					configd:secret true;
 				}
 				leaf-list client {
 					type union {
@@ -217,10 +225,10 @@ module vyatta-service-snmp-v1 {
 				leaf-list network {
 					type union {
 						type types:ipv4-prefix {
-							configd:syntax "/opt/vyatta/share/tmplscripts/service/snmp/community/network/configd_syntax1.cli";
+							configd:normalize "normalize ipv4-prefix";
 						}
 						type types:ipv6-prefix {
-							configd:syntax "/opt/vyatta/share/tmplscripts/service/snmp/community/network/configd_syntax1.cli";
+							configd:normalize "normalize ipv6-prefix";
 						}
 					}
 					ordered-by "user";

@@ -103,6 +103,8 @@ sub snmp_start {
     open( my $fh, '>', $snmp_tmp )
       or die "Couldn't open $snmp_tmp - $!";
 
+    chmod 0640, $fh;
+
     select $fh;
     snmp_get_constants();
     snmp_get_values();
