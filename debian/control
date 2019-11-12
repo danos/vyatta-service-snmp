@@ -1,0 +1,75 @@
+Source: vyatta-service-snmp
+Section: contrib/net
+Priority: optional
+Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
+Build-Depends: cpio,
+    debhelper (>= 9),
+    dh-systemd (>= 1.5),
+    dh-yang,
+    libreadonly-perl,
+    libfile-slurp-perl,
+    libjson-perl,
+    libjson-xs-perl,
+    libsnmp-extension-passpersist-perl,
+    libsnmp-dev,
+Standards-Version: 3.9.6
+
+Package: vyatta-omrfc5676
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: rsyslogd helper for RFC5676 support
+ omrfc5676 is a helper for rsyslogd that provides RFC5676 notifications
+
+Package: vyatta-service-snmp
+Architecture: any
+Depends: libsocket-perl,
+ libsocket6-perl,
+ snmp (>= 5.7.3+dfsg-2+vyatta7),
+ snmpd (>=  5.7.3+dfsg-2+vyatta7),
+ snmptrapd,
+ libsnmp-extension-passpersist-perl,
+ vyatta-cfg,
+ vyatta-system (>= 1.6.1),
+ ${misc:Depends},
+ ${perl:Depends},
+ python3,
+ vyatta-dataplane-op-npf-op-0,
+ vyatta-mibs-misc (>= 0.4),
+ vyatta-omrfc5676,
+ vyatta-platform-util,
+ vyatta-entity-sensor-subagent,
+Breaks: vyatta-cfg-system (<< 1.6.0), vyatta-op (<< 1.0)
+Replaces: vyatta-cfg-system (<< 1.6.0), vyatta-op (<< 1.0)
+Provides: libvyatta-ifmib-perl
+Description: SNMP helper scripts
+ Scripts to handle configuration of SNMP
+
+Package: vyatta-entity-sensor-subagent
+Architecture: any
+Depends: ${misc:Depends}, ${perl:Depends}, ${shlibs:Depends}
+Description: vyatta-entity-sensor_subagent module
+ SNMP subagent for sending Entity Sensor traps
+
+Package: vyatta-service-snmp-v1-yang
+Architecture: all
+Depends: vyatta-service-snmp, ${misc:Depends}, ${yang:Depends},
+ libmodule-load-conditional-perl
+Breaks: vyatta-cfg-system (<< 1.6.0)
+Replaces: vyatta-cfg-system (<< 1.6.0)
+Description: vyatta-service-snmp-v1 module
+ SNMP configuration
+
+Package: vyatta-service-snmp-routing-instance-op
+Architecture: all
+Depends: vyatta-service-snmp, chvrf, ${perl:Depends}, ${misc:Depends}
+Description: SNMP routing instance template module
+ SNMP routing-instance specific templates
+
+Package: vyatta-service-snmp-routing-instance-v1-yang
+Architecture: all
+Depends: vyatta-service-snmp, ${misc:Depends}, ${yang:Depends},
+ libvyatta-vrfmanager-perl,
+ vyatta-service-snmp-routing-instance-op,
+ vyatta-snmp-vrf-agent (>= 1.8)
+Description: vyatta-service-snmp-routing-instance-v1 module
+ SNMP routing-instance configuration

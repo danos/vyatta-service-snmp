@@ -1,0 +1,5 @@
+vyatta-service-snmp (0.30.2) unstable; urgency=medium
+
+  * DANOS Import
+
+ -- Vyatta Package Maintainers <DL-vyatta-help@att.com>  Tue, 12 Nov 2019 14:48:45 +0000
