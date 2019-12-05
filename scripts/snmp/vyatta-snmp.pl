@@ -185,7 +185,9 @@ sub is_vrf_local_address {
     socket( my $sock, $pf, SOCK_STREAM, 0 )
       or die "socket failed\n";
 
-    setsockopt( $sock, SOL_SOCKET, SO_BINDTODEVICE, pack("Z*", "vrf$vrf" ) )
+    $vrf = "vrf$vrf" if ( $vrf !~ /^vrf/ );
+
+    setsockopt( $sock, SOL_SOCKET, SO_BINDTODEVICE, pack("Z*", $vrf ) )
       or die "setsockopt failed\n";
 
     my $ret = bind( $sock, $sockaddr );
@@ -196,8 +198,9 @@ sub is_vrf_local_address {
 # Check if the configured listen address
 # is present on the system
 sub validate_listen_address {
-    $config->setLevel('service snmp listen-address');
+    $config->setLevel('service snmp');
     my @vrfs = $config->returnValues('routing-instance') if $vrf_available;
+    $config->setLevel('service snmp listen-address');
     my @address = $config->listNodes();
 
     if (@address) {
