@@ -1,3 +1,9 @@
+vyatta-service-snmp (0.35) unstable; urgency=medium
+
+  * SNMP Not working in 1908
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Fri, 06 Dec 2019 15:30:26 -0800
+
 vyatta-service-snmp (0.34) unstable; urgency=medium
 
   * DANOS Import master
