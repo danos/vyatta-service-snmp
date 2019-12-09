@@ -1,3 +1,9 @@
+vyatta-service-snmp (0.36) unstable; urgency=medium
+
+  * snmp entity subagent failed to handle month 12
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Mon, 09 Dec 2019 10:55:46 -0800
+
 vyatta-service-snmp (0.35) unstable; urgency=medium
 
   * SNMP Not working in 1908
