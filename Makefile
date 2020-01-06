@@ -14,7 +14,8 @@ install:
 		scripts/snmp/vyatta-show-snmp.pl \
 		scripts/snmp/vyatta-show-snmp-v3.pl \
 		scripts/snmp/vyatta-show-snmp-view \
-		scripts/snmp/vyatta-storm-ctl-trap.py
+		scripts/snmp/vyatta-storm-ctl-trap.py \
+		scripts/snmp/vyatta-buffer-congestion.py
 	mkdir -p $(DESTDIR)/opt/vyatta/sbin
 	install -m755 -t $(DESTDIR)/opt/vyatta/sbin \
 		scripts/system/vyatta_check_snmp_name.pl \

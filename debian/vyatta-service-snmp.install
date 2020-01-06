@@ -3,6 +3,7 @@ opt/vyatta/bin/vyatta-show-snmp.pl
 opt/vyatta/bin/vyatta-show-snmp-v3.pl
 opt/vyatta/bin/vyatta-show-snmp-view
 opt/vyatta/bin/vyatta-storm-ctl-trap.py
+opt/vyatta/bin/vyatta-buffer-congestion.py
 opt/vyatta/sbin/vyatta-nat-mib.pl
 opt/vyatta/sbin/vyattaqosmib.pl
 opt/vyatta/sbin/vyatta-snmp-validate

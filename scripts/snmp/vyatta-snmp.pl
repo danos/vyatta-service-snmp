@@ -116,6 +116,7 @@ sub snmp_start {
     snmp_get_overrides();
     snmp_get_sensortrap();
     snmp_get_storm_control_trap();
+    snmp_get_buffer_congestion();
     close $fh;
     select STDOUT;
 
@@ -631,6 +632,11 @@ sub snmp_get_storm_control_trap {
     } else {
         system("systemctl stop vyatta-storm-ctl-notifier");
     }
+}
+
+# Start the service to monitor Buffer congestion.
+sub snmp_get_buffer_congestion{
+    system("systemctl start vyatta-buffer-congestion-notifier");
 }
 
 # Check if entity sensor traps are enabled
