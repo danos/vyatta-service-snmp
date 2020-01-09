@@ -117,13 +117,11 @@ sub populate_entPhySensorTable {
             $EntitySensorDataType{ $e->{"value-type"} } );
         $snmp_subagent->add_oid_int( $entPhySensorScale, $id,
             $EntitySensorDataScale{ $e->{"value-scale"} } );
-        $snmp_subagent->add_oid_int(
-            $snmp_subagent, $entPhySensorPrecision,
-            $id,            $e->{"value-precision"}
-        );
+        $snmp_subagent->add_oid_int( $entPhySensorPrecision, $id,
+            $e->{"value-precision"} );
         $snmp_subagent->add_oid_int( $entPhySensorValue, $id, $e->{"value"} );
         $snmp_subagent->add_oid_int( $entPhySensorOperStatus, $id,
-            $e->{"oper-status"} );
+            $EntitySensorStatus{ $e->{"oper-status"} } );
         $snmp_subagent->add_oid_str( $entPhySensorUnitsDisplay, $id,
             $e->{"units-display"} );
 
