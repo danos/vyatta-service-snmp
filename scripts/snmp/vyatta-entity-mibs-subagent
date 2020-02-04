@@ -81,6 +81,7 @@ my %EntitySensorDataScale = (
 my %EntitySensorStatus = (
     "ok"             => 1,
     "unavailable"    => 2,
+    "notapplicable"  => 2,
     "nonoperational" => 3,
 );
 
@@ -109,6 +110,7 @@ sub populate_entPhySensorTable {
     my $sensors = get_sensor_data();
     return if ( !defined($sensors) );
 
+    my $update_rate = ENTITY_SENSOR_REFRESH * 1000;
     my @sorted = sort { $a->{id} <=> $b->{id} } @$sensors;
     foreach my $e (@sorted) {
         my $id = $e->{id};
@@ -132,7 +134,6 @@ sub populate_entPhySensorTable {
         $snmp_subagent->add_oid_timeticks( $entPhySensorValueTimeStamp, $id,
             int($epoch_secs) );
 
-        my $update_rate = ENTITY_SENSOR_REFRESH * 1000;
         $snmp_subagent->add_oid_unsigned( $entPhySensorValueUpdateRate, $id,
             $update_rate );
     }
