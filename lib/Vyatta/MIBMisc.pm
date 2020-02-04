@@ -88,13 +88,13 @@ sub get_next_oid {
     my $count       = $#$sorted_tree;
     my $index       = 0;
     my $curr_oid;
-    while ( $index < $count ) {
+    while ( $index <= $count ) {
         $curr_oid = $sorted_tree->[$index];
         my $curr_noid = new NetSNMP::OID($curr_oid);
         last if ( snmp_oid_compare( $oid, $curr_noid ) < 0 );
         $index++;
     }
-    if ( $index < $count ) {
+    if ( $index <= $count ) {
         my $tree = $mib_tree->{$reg_oid};
         if ( $tree->{$curr_oid} ) {
             my ( $type, $value ) = @{ $tree->{$curr_oid} };
