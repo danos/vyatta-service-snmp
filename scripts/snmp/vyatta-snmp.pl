@@ -330,6 +330,7 @@ sub snmp_get_constants {
     print "agentaddress ", join( ',', @addr ), "\n";
     print "agentgroup vyattacfg\n";
     print "agentXTimeout 5\n";
+    print "dontLogTCPWrappersConnects true\n";
 
     # Support for NAT MIB (RFC 4008)
     print "pass_persist .1.3.6.1.2.1.123.1 /opt/vyatta/sbin/vyatta-nat-mib.pl\n";
