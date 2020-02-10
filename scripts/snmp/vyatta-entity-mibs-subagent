@@ -88,7 +88,10 @@ my %EntitySensorStatus = (
 sub get_sensor_data {
     my $data = `/opt/vyatta/bin/yangop-get-sensor sensor`;
     return if ( !defined($data) );
-    return decode_json($data);
+    my $results;
+    eval { $results = decode_json($data); };
+    return if ($@);
+    return $results;
 }
 
 my $entPhysicalTable_columns = 18;
