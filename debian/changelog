@@ -1,3 +1,16 @@
+vyatta-service-snmp (0.37) unstable; urgency=medium
+
+  [ Ethan Li ]
+  * Handle SNMP traps for 'no buffer' notification
+
+  [ Sharmila Podury ]
+  * ENTITY-SENSOR-MIB: Incorrect OID values
+  * ENTITY-MIB: Missing entPhysicalDescr OID
+  * Suppress SNMP client connection log messages
+  * SNMP errors during PTP configuration
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Tue, 11 Feb 2020 14:05:55 -0800
+
 vyatta-service-snmp (0.36) unstable; urgency=medium
 
   * snmp entity subagent failed to handle month 12
