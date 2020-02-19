@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 
 # 
-# Copyright (c) 2017-2019 AT&T Intellectual Property.
+# Copyright (c) 2017-2020 AT&T Intellectual Property.
 # Copyright (c) 2014-2016 by Brocade Communications Systems, Inc.
 # Copyright (c) 2007-2010 Vyatta, Inc.
 # All rights reserved.
@@ -67,11 +67,15 @@ sub show_all {
 }
 
 sub get_clientaddr {
+    my ($comm) = @_;
+
+    $comm = $INTERNALCOMM if ( !defined($comm) || $comm eq "" );
     my $cref       = read_config();
     my %community  = %{$cref};
     my $clientaddr = "";
     foreach my $c ( keys %community ) {
-        next if ( $c eq $INTERNALCOMM );
+        next if ( $comm eq $INTERNALCOMM && $c eq $INTERNALCOMM );
+        next if ( $comm ne $INTERNALCOMM && $c ne $comm );
         if ( $community{$c} ne '0.0.0.0/0' ) {
             my ( $addr, undef ) = split( /\//, $community{$c} );
             $clientaddr = "--clientaddr=$addr";
@@ -81,12 +85,13 @@ sub get_clientaddr {
     return $clientaddr;
 }
 
-# check status of any accessible community on localhost
-sub status_any {
-    my $clientaddr = get_clientaddr();
-    status( $INTERNALCOMM, $clientaddr, 'localhost' );
-    status_v3();
+# check status of specified community on host
+sub status_comm {
+    my ($comm, $host) = @_;
 
+    my $clientaddr = get_clientaddr($comm);
+    status( $comm, $clientaddr, $host );
+    status_v3();
 }
 
 sub show_mib {
@@ -145,7 +150,17 @@ sub status_v3 {
 sub status {
     my ( $community, $clientaddr, $host ) = @_;
 
-    print "Status of SNMP on $host\n";
+    if ( defined($host) && $host ne "" ) {
+        my $snmphost = $host;
+        if ( valid_ipv6_addr($host) ) {
+            $snmphost = "udp6:${host}";
+        }
+    } else {
+        $snmphost = 'localhost';
+    }
+
+    print "Status of SNMP on $snmphost\n";
+
     my @status_cmd;
     if ($vrf_available) {
         my @vrfs = returnValues("routing-instance");
@@ -155,7 +170,7 @@ sub status {
         }
     }
     push( @status_cmd,
-        $SNMPSTATUS, '-v2c', '-c', $community, $clientaddr, $host );
+        $SNMPSTATUS, '-v2c', '-c', $community, $clientaddr, $snmphost );
     exec @status_cmd;
     die "Can't exec $SNMPSTATUS : $!";
 }
@@ -319,8 +334,8 @@ GetOptions(
 ) or usage();
 
 show_all() if ($allowed);
-status( $community, $host ) if ( defined($community) );
-status_any() if ( defined($status) );
+status_comm( $community, $host ) if ( defined($community) );
+status_comm( $INTERNALCOMM, "localhost" ) if ( defined($status) );
 show_mib()   if ( defined($mib) );
 if ($vrf_available) {
     show_mapping()               if ( defined($mapping) );
