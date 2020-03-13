@@ -1,6 +1,6 @@
-# Module: SNMPSubagent.pm
+# Module: MIBMisc.pm
 #
-# Copyright (c) 2019, AT&T Intellectual Property.
+# Copyright (c) 2019-2020, AT&T Intellectual Property.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
@@ -71,11 +71,12 @@ sub get_reg_oid {
 sub get_oid {
     my ($oid) = @_;
 
+    my $noid        = SNMP::translateObj($oid);
     my $reg_oid     = get_reg_oid($oid);
     my $sorted_tree = $sorted_mib_tree->{$reg_oid};
     my $tree        = $mib_tree->{$reg_oid};
-    if ( $tree->{$oid} ) {
-        my ( $type, $value ) = @{ $tree->{$oid} };
+    if ( $tree->{$noid} ) {
+        my ( $type, $value ) = @{ $tree->{$noid} };
         return ( $type, $value );
     }
 }
