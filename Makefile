@@ -30,7 +30,8 @@ install:
 		scripts/snmp/vyatta-storm-ctl-mib.pl \
 		scripts/snmp/notification-to-syslog \
 		scripts/snmp/syslog-to-notification-end \
-		scripts/snmp/entity-sensor-ipmi
+		scripts/snmp/entity-sensor-ipmi \
+		scripts/snmp/vyatta_sendtrap_daemonstopped
 	mkdir -p $(DESTDIR)/opt/vyatta/share/perl5/Vyatta
 	install -m644 -t $(DESTDIR)/opt/vyatta/share/perl5/Vyatta \
 		lib/Vyatta/IFMib.pm \
