@@ -150,8 +150,9 @@ sub status_v3 {
 sub status {
     my ( $community, $clientaddr, $host ) = @_;
 
+    my $snmphost;
     if ( defined($host) && $host ne "" ) {
-        my $snmphost = $host;
+        $snmphost = $host;
         if ( valid_ipv6_addr($host) ) {
             $snmphost = "udp6:${host}";
         }
