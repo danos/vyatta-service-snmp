@@ -1,3 +1,17 @@
+vyatta-service-snmp (0.38) unstable; urgency=medium
+
+  [ Sharmila Podury ]
+  * 'show snmp community' error
+
+  [ Duncan Eastoe ]
+  * MIBMisc.pm: get_oid() requires numeric OID
+
+  [ Sharmila Podury ]
+  * Add vyatta_sendtrap_daemonstopped script
+  * SNMP show commands for community and trap-target fail
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Mon, 30 Mar 2020 09:27:05 -0700
+
 vyatta-service-snmp (0.37) unstable; urgency=medium
 
   [ Ethan Li ]
