@@ -1,3 +1,9 @@
+vyatta-service-snmp (0.39) unstable; urgency=medium
+
+  * Rebrand AT&T proprietary MIB objects values
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Fri, 10 Apr 2020 14:29:28 -0700
+
 vyatta-service-snmp (0.38) unstable; urgency=medium
 
   [ Sharmila Podury ]
