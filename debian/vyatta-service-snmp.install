@@ -6,6 +6,7 @@ opt/vyatta/bin/vyatta-storm-ctl-trap.py
 opt/vyatta/bin/vyatta-buffer-congestion.py
 opt/vyatta/sbin/vyatta-nat-mib.pl
 opt/vyatta/sbin/vyattaqosmib.pl
+opt/vyatta/sbin/vyatta_sendtrap_daemonstopped
 opt/vyatta/sbin/vyatta-snmp-validate
 opt/vyatta/sbin/vyatta-snmp-v3.pl
 opt/vyatta/sbin/vyatta-snmp.pl
