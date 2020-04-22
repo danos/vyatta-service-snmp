@@ -1,3 +1,10 @@
+vyatta-service-snmp (0.40) unstable; urgency=medium
+
+  [ Nicholas Brown ]
+  * Actually install vyatta_sendtrap_daemonstopped
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Wed, 22 Apr 2020 10:10:31 -0700
+
 vyatta-service-snmp (0.39) unstable; urgency=medium
 
   * Rebrand AT&T proprietary MIB objects values
