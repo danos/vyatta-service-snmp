@@ -15,7 +15,7 @@ use NetSNMP::OID (':all');
 
 use base qw( Exporter );
 our @EXPORT =
-  qw(create_mib_tree sort_mib_keys add_mib_entry get_oid get_next_oid set_oid);
+  qw(create_mib_tree clear_mib_trees sort_mib_keys add_mib_entry get_oid get_next_oid set_oid);
 
 my $mib_tree        = {};
 my $sorted_mib_tree = {};
@@ -33,6 +33,16 @@ sub create_mib_tree {
 
     $mib_tree->{$oid}        = {};
     $sorted_mib_tree->{$oid} = ();
+}
+
+sub clear_mib_trees {
+    foreach my $key ( keys %{$mib_tree} ) {
+        $mib_tree->{$key} = {};
+    }
+
+    foreach my $key ( keys %{$sorted_mib_tree} ) {
+        $sorted_mib_tree->{$key} = ();
+    }
 }
 
 sub sort_mib_keys {
