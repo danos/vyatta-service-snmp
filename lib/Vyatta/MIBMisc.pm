@@ -32,7 +32,7 @@ sub create_mib_tree {
     my ($oid) = @_;
 
     $mib_tree->{$oid}        = {};
-    $sorted_mib_tree->{$oid} = {};
+    $sorted_mib_tree->{$oid} = ();
 }
 
 sub sort_mib_keys {
