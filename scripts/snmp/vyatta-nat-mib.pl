@@ -2960,8 +2960,16 @@ sub parse_nat_rule {
     #Not known
     $natAddrMapTable{"$BASE_OID.4.1.18.$ifindex.$rule_id"} = UNSUPPORTED;
 
+    my $used = 0;
+    if ( defined $rule->{protocols} ) {
+        foreach my $prot ( @{ $rule->{protocols} } ) {
+            $used += $prot->{used_ts};
+        }
+    } else {
+        $used = $rule->{used_ts};
+    }
     #natAddrMapAddrUsed
-    $natAddrMapTable{"$BASE_OID.4.1.19.$ifindex.$rule_id"} = $rule->{used_ts};
+    $natAddrMapTable{"$BASE_OID.4.1.19.$ifindex.$rule_id"} = $used;
 
     #natAddrMapStorageType
     #1:other, 2:volatile. 3:nonVolatile, 4:permanent, 5:readOnly
