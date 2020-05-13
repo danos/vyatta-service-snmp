@@ -55,7 +55,9 @@ my $mib_tree        = {};
 #      ".1.3" => ( ".1.3.1.10", ".1.3.1.11" ),
 #   }
 #
-# Each array is only populated by a call to sort_mib_keys().
+# Each array is initially populated when data is inserted into the data
+# tree by calls to add_mib_entry(). However each array is not guaranteed
+# to be sorted until all data has been inserted and sort_mib_keys() is called.
 my $sorted_mib_tree = {};
 
 # Sub-agent GETNEXT lookup table
@@ -114,8 +116,9 @@ sub clear_mib_trees {
 sub sort_mib_keys {
     my ($oid) = @_;
 
-    my $tree        = $mib_tree->{$oid};
-    my @sorted_oids = sort by_oid keys %{$tree};
+    # The sorted tree was already populated by add_mib_entry() but is
+    # *not* necessarily already sorted.
+    my @sorted_oids = sort by_oid @{ $sorted_mib_tree->{$oid} };
     $sorted_mib_tree->{$oid} = \@sorted_oids;
 
     # Generate get next mapping for fast lookup
@@ -138,6 +141,10 @@ sub add_mib_entry {
     my @args = ( $type, $value );
     my $tree = $mib_tree->{$oid};
     $tree->{$entry_oid} = \@args;
+
+    # Assume that data is being inserted in (at least roughly) the correct
+    # order. This reduces the cost of the later sort operation.
+    push @{ $sorted_mib_tree->{$oid} }, $entry_oid;
 }
 
 sub get_reg_oid {
