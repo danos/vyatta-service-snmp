@@ -58,6 +58,32 @@ my $mib_tree        = {};
 # Each array is only populated by a call to sort_mib_keys().
 my $sorted_mib_tree = {};
 
+# Sub-agent GETNEXT lookup table
+#
+# Implemented as a hash of instantiated OIDs each mapping to the OID of the
+# sibling which follows. This is used to allow most GETNEXT requests to be
+# completed in constant time, since we don't need to iterate the data tree.
+#
+# eg. assuming the sub-agent registered to handle OID trees .1.2 and .1.3
+#
+#   {
+#      ".1.2.1.2" => "END",
+#      ".1.3.1.11" => "END",
+#      ".1.2.1.1" => ".1.2.1.2",
+#      ".1.3.1.10" => ".1.3.1.11",
+#   }
+#
+# The hash is built by calls to sort_mib_keys(). The last OID in each tree
+# always maps to "END", which allows us to differentiate between a lookup
+# for an unknown OID (in which case we fallback to iteration) and the end
+# of the tree.
+#
+# When handling a GETNEXT request, via get_next_oid(), we use the input
+# OID to lookup the table. If there is an entry this gives us the key into
+# the data tree. If there is no entry we fallback to iterating the sorted
+# OID list to determine the data tree key.
+my $get_next_lookup = {};
+
 sub by_oid ($$) {
     my ( undef, @a ) = split /\./, $_[0];
     my ( undef, @b ) = split /\./, $_[1];
@@ -81,6 +107,8 @@ sub clear_mib_trees {
     foreach my $key ( keys %{$sorted_mib_tree} ) {
         $sorted_mib_tree->{$key} = ();
     }
+
+    $get_next_lookup = {};
 }
 
 sub sort_mib_keys {
@@ -89,6 +117,14 @@ sub sort_mib_keys {
     my $tree        = $mib_tree->{$oid};
     my @sorted_oids = sort by_oid keys %{$tree};
     $sorted_mib_tree->{$oid} = \@sorted_oids;
+
+    # Generate get next mapping for fast lookup
+    foreach my $idx ( 0 .. $#sorted_oids ) {
+
+       # END differentiates the end of the tree from a lookup for an unknown OID
+        $get_next_lookup->{ $sorted_oids[$idx] } = $sorted_oids[ $idx + 1 ]
+          // "END";
+    }
 }
 
 sub add_mib_entry {
@@ -132,23 +168,29 @@ sub get_oid {
 sub get_next_oid {
     my ($oid) = @_;
 
-    my $reg_oid     = get_reg_oid($oid);
-    my $sorted_tree = $sorted_mib_tree->{$reg_oid};
-    my $count       = $#$sorted_tree;
-    my $index       = 0;
-    my $curr_oid;
-    while ( $index <= $count ) {
-        $curr_oid = $sorted_tree->[$index];
-        my $curr_noid = new NetSNMP::OID($curr_oid);
-        last if ( snmp_oid_compare( $oid, $curr_noid ) < 0 );
-        $index++;
-    }
-    if ( $index <= $count ) {
-        my $tree = $mib_tree->{$reg_oid};
-        if ( $tree->{$curr_oid} ) {
-            my ( $type, $value ) = @{ $tree->{$curr_oid} };
-            return ( $curr_oid, $type, $value );
+    my $reg_oid = get_reg_oid($oid);
+
+    my $curr_oid = $get_next_lookup->{ SNMP::translateObj($oid) };
+    if ( !defined($curr_oid) ) {
+
+        # No entry in fast lookup table - fallback to searching the sorted tree
+        my $sorted_tree = $sorted_mib_tree->{$reg_oid};
+        my $count       = $#$sorted_tree;
+        my $index       = 0;
+
+        while ( $index <= $count ) {
+            $curr_oid = $sorted_tree->[$index];
+            my $curr_noid = new NetSNMP::OID($curr_oid);
+            last if ( snmp_oid_compare( $oid, $curr_noid ) < 0 );
+            $index++;
         }
+        return if ( $index > $count );
+    }
+
+    my $tree = $mib_tree->{$reg_oid};
+    if ( $tree->{$curr_oid} ) {
+        my ( $type, $value ) = @{ $tree->{$curr_oid} };
+        return ( $curr_oid, $type, $value );
     }
 }
 
