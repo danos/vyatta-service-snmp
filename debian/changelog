@@ -1,3 +1,15 @@
+vyatta-service-snmp (0.41) unstable; urgency=medium
+
+  [ Duncan Eastoe ]
+  * vyatta-service-snmp: add libsnmp-perl dependency
+  * Initialise $sorted_mib_tree entry as array
+  * MIBMisc: Add clear_mib_trees sub
+  * MIBMisc: document key data structures
+  * MIBMisc: add GETNEXT fast lookup table
+  * Assume MIB trees are built roughly sorted
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Wed, 13 May 2020 10:09:20 -0700
+
 vyatta-service-snmp (0.40) unstable; urgency=medium
 
   [ Nicholas Brown ]
