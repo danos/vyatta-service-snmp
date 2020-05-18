@@ -29,6 +29,7 @@ Depends: libsocket-perl,
  snmptrapd,
  libsnmp-extension-passpersist-perl,
  libsnmp-perl,
+ libsnmp-vyatta-perl,
  vyatta-cfg,
  vyatta-system (>= 1.6.1),
  ${misc:Depends},
@@ -44,6 +45,16 @@ Replaces: vyatta-cfg-system (<< 1.6.0), vyatta-op (<< 1.0)
 Provides: libvyatta-ifmib-perl
 Description: SNMP helper scripts
  Scripts to handle configuration of SNMP
+
+Package: libsnmp-vyatta-perl
+Architecture: any
+Breaks: vyatta-service-snmp (<< 0.42)
+Replaces: vyatta-service-snmp (<< 0.42)
+Depends:
+ libsnmp-perl,
+ ${perl:Depends},
+Description: SNMP helper Perl modules
+ Provides the Vyatta/Subagent.pm and Vyatta/MIBMisc.pm modules
 
 Package: vyatta-entity-sensor-subagent
 Architecture: any
