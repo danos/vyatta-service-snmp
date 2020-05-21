@@ -1,3 +1,13 @@
+vyatta-service-snmp (0.42) unstable; urgency=medium
+
+  [ Gavin Shearer ]
+  * nat: update due to change in NAT mappings used count JSON output
+
+  [ Duncan Eastoe ]
+  * Split Subagent.pm and MIBMisc.pm into lib package
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Thu, 21 May 2020 12:24:32 -0700
+
 vyatta-service-snmp (0.41) unstable; urgency=medium
 
   [ Duncan Eastoe ]
