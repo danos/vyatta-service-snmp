@@ -96,10 +96,9 @@ def Listener():
     while True:
         data = s.recv_multipart()
         numargs = len(data)
-        syslog.syslog(syslog.LOG_ERR, "Received {} args".format(numargs))
-        if numargs < 5:
+        if numargs is not 6:
             syslog.syslog(syslog.LOG_ERR,
-                          "Storm Control notification - 5 args expected" +
+                          "Storm Control notification - 6 args expected" +
                           ", received {}".format(numargs))
             continue
 
