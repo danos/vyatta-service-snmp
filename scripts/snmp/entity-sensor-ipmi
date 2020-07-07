@@ -358,7 +358,13 @@ sub get_sensor_trap_varbinds {
 
     return
       if (
-        !( $type eq "Temperature" || $type eq "Voltage" || $type eq "Fan" ) );
+        !(
+               $type eq "Temperature"
+            || $type eq "Voltage"
+            || $type eq "Fan"
+            || $type eq "Current"
+        )
+      );
 
     my $descr = $einfo->{'Description'};
     return if ( !defined($descr) );
