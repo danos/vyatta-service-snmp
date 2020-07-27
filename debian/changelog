@@ -1,3 +1,9 @@
+vyatta-service-snmp (0.44) unstable; urgency=medium
+
+  * J2: Support for ENTITY SENSOR MIB
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Mon, 27 Jul 2020 15:10:33 -0700
+
 vyatta-service-snmp (0.43) unstable; urgency=medium
 
   [ Thomas Kiely ]
