@@ -2,7 +2,7 @@
 #
 # Module: vyatta-snmp.pl
 #
-# Copyright (c) 2017-2019 AT&T Intellectual Property.
+# Copyright (c) 2017-2020 AT&T Intellectual Property.
 # Copyright (c) 2014-2017 Brocade Communications Systems, Inc.
 # Copyright (c) 2007-2010 Vyatta, Inc.
 # All Rights Reserved.
@@ -741,6 +741,7 @@ sub snmp_trapd_service_start_stop {
             system("systemctl restart $service > /dev/null 2>&1");
         }
     } else {
+        unlink($trapd_cfg);
         for my $service (@trapd_services) {
             system("systemctl stop $service > /dev/null 2>&1");
         }
