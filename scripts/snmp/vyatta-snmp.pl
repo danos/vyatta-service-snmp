@@ -46,7 +46,7 @@ my $config = new Vyatta::Config;
 
 my $snmp_level = 'service snmp';
 
-my @trapd_services = ('vyatta-ipsec-trapd');
+my @trapd_services = ();
 
 # Are we using routing-domain VRF implementation, as opposed to VRF
 # master implementation?
