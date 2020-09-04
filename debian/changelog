@@ -1,3 +1,10 @@
+vyatta-service-snmp (0.45) unstable; urgency=medium
+
+  [ Nicholas Brown ]
+  * Use description from 'show version' for sysDescr
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Fri, 04 Sep 2020 09:44:58 -0700
+
 vyatta-service-snmp (0.44) unstable; urgency=medium
 
   * J2: Support for ENTITY SENSOR MIB
