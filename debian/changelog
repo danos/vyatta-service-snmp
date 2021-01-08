@@ -1,3 +1,11 @@
+vyatta-service-snmp (0.46) unstable; urgency=medium
+
+  [ Daniel Gollub ]
+  * Drop vyatta-ipsec-trapd reference
+  * Wipe trapd.ini config in case of a config tear down
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Fri, 08 Jan 2021 10:18:41 -0800
+
 vyatta-service-snmp (0.45) unstable; urgency=medium
 
   [ Nicholas Brown ]
