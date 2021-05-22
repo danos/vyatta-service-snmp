@@ -17,6 +17,7 @@ opt/vyatta/sbin/vyatta-entity-mibs-subagent
 opt/vyatta/sbin/vyatta-ptp-mib-subagent
 opt/vyatta/sbin/notification-to-syslog
 opt/vyatta/sbin/syslog-to-notification-end
+opt/vyatta/sbin/vyatta_reboot_reason_trap
 opt/vyatta/share/perl5/Vyatta/IFMib.pm
 opt/vyatta/share/tmplscripts/service/snmp
 opt/vyatta/share/vyatta-op

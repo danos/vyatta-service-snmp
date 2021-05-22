@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+# Copyright (c) 2021, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+
+use strict;
+use warnings;
+use IPC::Run3;
+
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::RebootReason;
+
+my $TRAP_CMD           = "/usr/bin/agentxtrap";
+my $SNMPD_SERVICE      = 'snmpd.service';
+my @SERVICE_STATUS_CMD = ( 'systemctl', 'is-active', $SNMPD_SERVICE );
+
+my $TRAP_OID      = '1.3.6.1.4.1.74.1.32.7.0.1';
+my $TYPE_VAR_OID  = '1.3.6.1.4.1.74.1.32.7.1.1';
+my $DESCR_VAR_OID = '1.3.6.1.4.1.74.1.32.7.1.2';
+
+my @CMD = ( $TRAP_CMD, $TRAP_OID, $TYPE_VAR_OID, "i" );
+
+sub send_trap {
+    my ( $rr_type, $rr_reason ) = get_reboot_reason();
+    chomp($rr_reason);
+    push( @CMD, $rr_type );
+    push( @CMD, $DESCR_VAR_OID );
+    push( @CMD, "s" );
+    push( @CMD, "$rr_reason" );
+
+    return -1 if ( !run3( \@CMD, \undef, undef, undef ) );
+    return 0;
+}
+
+sub check_and_send_trap {
+    my $status = "inactive";
+    return -1 if ( !run3( \@SERVICE_STATUS_CMD, undef, \$status ) );
+    chomp($status);
+    if ( $status ne "active" ) {
+        print("Error: snmp daemon is not active\n");
+        return -1;
+    }
+    if ( send_trap() != 0 ) {
+        print print("Error: Agentx trap command failed");
+        return -1;
+    }
+    save_rr_log_file();
+    return 0;
+}
+
+sub run() {
+    my $status = check_and_send_trap();
+    while ( $status != 0 ) {
+        sleep(2);
+        $status = check_and_send_trap();
+    }
+    return 0;
+}
+
+run();

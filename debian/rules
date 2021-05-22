@@ -12,6 +12,7 @@ override_dh_systemd_enable:
 	dh_systemd_enable -p vyatta-service-snmp --name=vyatta-snmp-subagent vyatta-snmp-subagent.service
 	dh_systemd_enable -p vyatta-service-snmp --name=vyatta-entity-mibs-subagent vyatta-entity-mibs-subagent.service
 	dh_systemd_enable -p vyatta-service-snmp --name=vyatta-ptp-mib-subagent vyatta-ptp-mib-subagent.service
+	dh_systemd_enable -p vyatta-service-snmp --name=vyatta-reboot-reason-notifier vyatta-reboot-reason-notifier.service
 	dh_systemd_enable --name=snmptrapd --no-enable
 	dh_systemd_enable -p vyatta-entity-sensor-subagent --name=snmp-entsensor-trap snmp-entsensor-trap.service
 

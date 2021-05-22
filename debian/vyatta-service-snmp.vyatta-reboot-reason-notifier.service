@@ -1,0 +1,12 @@
+[Unit]
+Description=Vyatta SNMP Trap for Reboot Reason
+After=network.target snmpd.service
+
+[Service]
+ExecStart=/opt/vyatta/sbin/vyatta_reboot_reason_trap
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
