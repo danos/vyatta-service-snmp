@@ -1,6 +1,7 @@
 [Unit]
 Description=Vyatta SNMP Trap for Reboot Reason
-After=network.target snmpd.service
+Wants=system-configure.service
+After=system-configure.service
 
 [Service]
 ExecStart=/opt/vyatta/sbin/vyatta_reboot_reason_trap
