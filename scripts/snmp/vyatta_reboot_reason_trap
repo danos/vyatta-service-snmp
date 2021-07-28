@@ -20,7 +20,7 @@ my $TRAP_OID      = '1.3.6.1.4.1.74.1.32.7.0.1';
 my $TYPE_VAR_OID  = '1.3.6.1.4.1.74.1.32.7.1.1';
 my $DESCR_VAR_OID = '1.3.6.1.4.1.74.1.32.7.1.2';
 
-my $WAIT_TIME = 10
+my $WAIT_TIME = 10;
 
 my @CMD = ( $TRAP_CMD, $TRAP_OID, $TYPE_VAR_OID, "i" );
 
