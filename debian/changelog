@@ -1,3 +1,9 @@
+vyatta-service-snmp (0.50) unstable; urgency=medium
+
+  * Restart reason log is noisy
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Mon, 02 Aug 2021 13:25:15 -0700
+
 vyatta-service-snmp (0.49) unstable; urgency=medium
 
   * SIAD: Determine reason for system reboot
