@@ -23,7 +23,7 @@ module vyatta-service-snmp-routing-instance-v1 {
 		 Web:    www.att.com";
 
 	description
-		"Copyright (c) 2018-2019, AT&T Intellectual Property.
+		"Copyright (c) 2018-2021, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Copyright (c) 2016 by Brocade Communications Systems, Inc.
@@ -59,6 +59,10 @@ module vyatta-service-snmp-routing-instance-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 SNMP routing-instance configuration";
+
+	revision 2021-08-04 {
+		description "Support for listening on multiple VRFs.";
+	}
 
 	revision 2016-03-07 {
 		description "Added support for VRF-aware SNMP.";
@@ -101,9 +105,26 @@ module vyatta-service-snmp-routing-instance-v1 {
 	augment /service:service/snmp:snmp {
 		leaf-list routing-instance {
 			description "This leaf specifies the routing-instance SNMP agent is listening
-					on for incoming SNMP requests.";
+				on for incoming SNMP requests.";
+			must "(current() = /vyatta-routing:routing/vyatta-routing:routing-instance/vyatta-routing:instance-name) or (current() = 'default')" {
+				error-message "Unknown routing instance";
+			}
 			configd:help "Specifies the routing-instance to listen on for SNMP requests";
-			max-elements "1";
+			type union {
+				type vyatta-routing:routing-instance-name;
+				type enumeration {
+					enum default;
+					configd:help "Default routing instance";
+				}
+			}
+			configd:allowed "echo -n $VAR(/routing/routing-instance/@@)";
+		}
+	}
+	augment /service:service/snmp:snmp/snmp:listen-address {
+		leaf routing-instance {
+			description "This leaf is used to associate a routing-instance with listen-address,
+				     allowing SNMP to listen for requests from specific VRFs.";
+			configd:help "Specifies the routing-instance for listen-address";
 			type leafref {
 				path "/vyatta-routing:routing/vyatta-routing:routing-instance/vyatta-routing:instance-name";
 			}
