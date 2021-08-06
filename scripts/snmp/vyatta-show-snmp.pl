@@ -87,7 +87,7 @@ sub get_clientaddr {
 
 # check status of specified community on host
 sub status_comm {
-    my ($comm, $host) = @_;
+    my ( $comm, $host ) = @_;
 
     my $clientaddr = get_clientaddr($comm);
     status( $comm, $clientaddr, $host );
@@ -156,7 +156,8 @@ sub status {
         if ( valid_ipv6_addr($host) ) {
             $snmphost = "udp6:${host}";
         }
-    } else {
+    }
+    else {
         $snmphost = 'localhost';
     }
 
@@ -204,7 +205,7 @@ sub show_mapping {
     foreach my $comm ( listNodes("community") ) {
         my $context = returnValue("community $comm context");
         $context = "\'default\'" unless $context;
-        printf("%-28s%s\n", $comm, $context);
+        printf( "%-28s%s\n", $comm, $context );
     }
     print "\n";
 }
@@ -212,19 +213,21 @@ sub show_mapping {
 sub show_routing_instance {
     my @vrfs = returnValues("routing-instance");
 
-    print("\n\nRouting Instance SNMP Agent is Listening on for Incoming Requests:\n\n");
+    print(
+"\n\nRouting Instance SNMP Agent is Listening on for Incoming Requests:\n\n"
+    );
     print("Routing-Instance            RDID\n");
     print("-----------------           ----\n");
 
     if ( !@vrfs ) {
         my $vrf  = "\'default\'";
         my $rdid = 1;
-        printf("%-28s%d\n", $vrf, $rdid);
+        printf( "%-28s%d\n", $vrf, $rdid );
     }
     else {
         foreach my $vrf (@vrfs) {
             my $rdid = Vyatta::VrfManager::get_vrf_id($vrf);
-            printf("%-28s%d\n", $vrf, $rdid);
+            printf( "%-28s%d\n", $vrf, $rdid );
         }
     }
     print "\n";
@@ -239,10 +242,10 @@ sub show_trap {
         my $port = returnValue("trap-target $target port");
         my $comm = returnValue("trap-target $target community");
         if ( length($target) >= 30 ) {
-            printf("%s\n%30s%-7s%s\n", $target, "", $port, $comm);
+            printf( "%s\n%30s%-7s%s\n", $target, "", $port, $comm );
         }
         else {
-            printf("%-30s%-7s%s\n", $target, $port, $comm);
+            printf( "%-30s%-7s%s\n", $target, $port, $comm );
         }
     }
     print "\n";
@@ -259,10 +262,10 @@ sub show_routing_instance_trap {
         my $vrf  = returnValue("trap-target $target routing-instance");
         $vrf = "\'default\'" unless $vrf;
         if ( length($target) >= 30 ) {
-            printf("%s\n%30s%-7s%-17s%s\n", $target, "", $port, $vrf, $comm);
+            printf( "%s\n%30s%-7s%-17s%s\n", $target, "", $port, $vrf, $comm );
         }
         else {
-            printf("%-30s%-7s%-17s%s\n", $target, $port, $vrf, $comm);
+            printf( "%-30s%-7s%-17s%s\n", $target, $port, $vrf, $comm );
         }
     }
     print "\n";
@@ -294,9 +297,9 @@ GetOptions(
 ) or usage();
 
 show_all() if ($allowed);
-status_comm( $community, $host ) if ( defined($community) );
+status_comm( $community,    $host )       if ( defined($community) );
 status_comm( $INTERNALCOMM, "localhost" ) if ( defined($status) );
-show_mib()   if ( defined($mib) );
+show_mib() if ( defined($mib) );
 if ($vrf_available) {
     show_mapping()               if ( defined($mapping) );
     show_routing_instance_trap() if ( defined($trap) );
