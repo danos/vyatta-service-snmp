@@ -210,25 +210,63 @@ sub show_mapping {
     print "\n";
 }
 
-sub show_routing_instance {
-    my @vrfs = returnValues("routing-instance");
+sub print_listen_address {
+    my ( $laddrs, $vrf, $rdid ) = @_;
+    return unless ( defined($vrf) );
 
+    if ( defined($laddrs) ) {
+        my $start = 0;
+        foreach my $addr (@$laddrs) {
+            my $port = returnValue("listen-address $addr port");
+            $port = '161' unless $port;
+            $port =~ tr/'//d;
+            if ( $start == 0 ) {
+                printf( "%-28s%-7d%-7s%s\n", $vrf, $rdid, $port, $addr );
+                $start = 1;
+            }
+            else {
+                printf( "%-35s%-7s%s\n", "", $port, $addr );
+            }
+        }
+    }
+    else {
+        printf( "%-28s%d\n", $vrf, $rdid );
+    }
+}
+
+sub get_vrf_addrs {
+    my $laddrs;
+    my @addrs = returnValues("listen-address");
+    foreach my $addr (@addrs) {
+        my $vrf = returnValue("listen-address $addr routing-instance");
+        if ( defined($vrf) && $vrf ne "" ) {
+            $vrf =~ tr/'//d;
+            push @{ $laddrs->{$vrf} }, $addr;
+        }
+        else {
+            push @{ $laddrs->{'default'} }, $addr;
+        }
+    }
+    return $laddrs;
+}
+
+sub show_routing_instance {
     print(
 "\n\nRouting Instance SNMP Agent is Listening on for Incoming Requests:\n\n"
     );
-    print("Routing-Instance            RDID\n");
-    print("-----------------           ----\n");
+    print("Routing-Instance            RDID   Port   Listen Address\n");
+    print("-----------------           ----   ----   --------------\n");
 
-    if ( !@vrfs ) {
-        my $vrf  = "\'default\'";
-        my $rdid = 1;
-        printf( "%-28s%d\n", $vrf, $rdid );
+    my $vaddrs = get_vrf_addrs();
+    my @vrfs   = returnValues("routing-instance");
+    foreach my $vrf (@vrfs) {
+        push @{ $vaddrs->{$vrf} }, "" unless ( exists $vaddrs->{$vrf} );
     }
-    else {
-        foreach my $vrf (@vrfs) {
-            my $rdid = Vyatta::VrfManager::get_vrf_id($vrf);
-            printf( "%-28s%d\n", $vrf, $rdid );
-        }
+    print_listen_address( undef, 'default', 1 )
+      unless ( @vrfs || $vaddrs );
+    foreach my $vrf ( keys %{$vaddrs} ) {
+        my $rdid = Vyatta::VrfManager::get_vrf_id($vrf);
+        print_listen_address( $vaddrs->{$vrf}, $vrf, $rdid );
     }
     print "\n";
 }
