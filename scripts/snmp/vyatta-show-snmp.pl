@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 
-# 
-# Copyright (c) 2017-2020 AT&T Intellectual Property.
+#
+# Copyright (c) 2017-2021 AT&T Intellectual Property.
 # Copyright (c) 2014-2016 by Brocade Communications Systems, Inc.
 # Copyright (c) 2007-2010 Vyatta, Inc.
 # All rights reserved.
@@ -197,23 +197,14 @@ sub returnValues {
 }
 
 sub show_mapping {
-    print <<END;
-
-SNMPv1/v2c Community/Context Mapping:
-
-Community                   Context
----------                   -------
-END
+    print("\n\nSNMPv1/v2c Community/Context Mapping:\n\n");
+    print("Community                   Context\n");
+    print("---------                   -------\n");
 
     foreach my $comm ( listNodes("community") ) {
         my $context = returnValue("community $comm context");
         $context = "\'default\'" unless $context;
-        $~ = "MAPPING_FORMAT";
-        format MAPPING_FORMAT =
-@<<<<<<<<<<<<<<<<<<<<<<<<<< @*
-$comm, $context
-.
-        write;
+        printf("%-28s%s\n", $comm, $context);
     }
     print "\n";
 }
@@ -221,73 +212,46 @@ $comm, $context
 sub show_routing_instance {
     my @vrfs = returnValues("routing-instance");
 
-    print <<END;
-
-Routing Instance SNMP Agent is Listening on for Incoming Requests:
-
-Routing-Instance            RDID
------------------           ----
-END
+    print("\n\nRouting Instance SNMP Agent is Listening on for Incoming Requests:\n\n");
+    print("Routing-Instance            RDID\n");
+    print("-----------------           ----\n");
 
     if ( !@vrfs ) {
         my $vrf  = "\'default\'";
         my $rdid = 1;
-        $~ = "NO_VRF_FORMAT";
-        format NO_VRF_FORMAT =
-@<<<<<<<<<<<<<<<<<<<<<<<<<< @*
-$vrf, $rdid
-.
-        write;
+        printf("%-28s%d\n", $vrf, $rdid);
     }
     else {
         foreach my $vrf (@vrfs) {
             my $rdid = Vyatta::VrfManager::get_vrf_id($vrf);
-            $~ = "VRF_FORMAT";
-            format VRF_FORMAT =
-@<<<<<<<<<<<<<<<<<<<<<<<<<< @*
-$vrf, $rdid
-.
-            write;
+            printf("%-28s%d\n", $vrf, $rdid);
         }
     }
     print "\n";
 }
 
 sub show_trap {
-    print <<END;
-
-SNMPv1/v2c Trap-targets:
-
-Trap-target                   Port   Community
------------                   ----   ---------
-END
+    print("\n\nSNMPv1/v2c Trap-targets:\n\n");
+    print("Trap-target                   Port   Community\n");
+    print("-----------                   ----   ---------\n");
 
     foreach my $target ( listNodes("trap-target") ) {
         my $port = returnValue("trap-target $target port");
         my $comm = returnValue("trap-target $target community");
         if ( length($target) >= 30 ) {
-            print "$target\n                               $port $comm\n";
+            printf("%s\n%30s%-7s%s\n", $target, "", $port, $comm);
         }
         else {
-            $~ = "TRAP_FORMAT";
-            format TRAP_FORMAT =
-@<<<<<<<<<<<<<<<<<<<<<<<<<<<< @<<<<< @*
-$target, $port, $comm
-.
-            write;
+            printf("%-30s%-7s%s\n", $target, $port, $comm);
         }
     }
     print "\n";
 }
 
 sub show_routing_instance_trap {
-    print <<END;
-
-SNMPv1/v2c Trap-targets:
-
-Trap-target                   Port   Routing-Instance Community
------------                   ----   ---------------- ---------
-END
+    print("\n\nSNMPv1/v2c Trap-targets:\n\n");
+    print("Trap-target                   Port   Routing-Instance Community\n");
+    print("-----------                   ----   ---------------- ---------\n");
 
     foreach my $target ( listNodes("trap-target") ) {
         my $port = returnValue("trap-target $target port");
@@ -295,15 +259,10 @@ END
         my $vrf  = returnValue("trap-target $target routing-instance");
         $vrf = "\'default\'" unless $vrf;
         if ( length($target) >= 30 ) {
-            print "$target\n                               $port $vrf $comm\n";
+            printf("%s\n%30s%-7s%-17s%s\n", $target, "", $port, $vrf, $comm);
         }
         else {
-            $~ = "VRF_TRAP_FORMAT";
-            format VRF_TRAP_FORMAT =
-@<<<<<<<<<<<<<<<<<<<<<<<<<<<< @<<<<< @<<<<<<<<<<<<<<< @*
-$target, $port, $vrf, $comm
-.
-            write;
+            printf("%-30s%-7s%-17s%s\n", $target, $port, $vrf, $comm);
         }
     }
     print "\n";
