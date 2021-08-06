@@ -28,8 +28,10 @@ use Config::IniFiles;
 
 use constant SO_BINDTODEVICE => 25;
 
-my $vrf_available = can_load( modules => { "Vyatta::VrfManager" => undef },
-    autoload => "true" );
+my $vrf_available = can_load(
+    modules  => { "Vyatta::VrfManager" => undef },
+    autoload => "true"
+);
 my $mibdir                      = '/opt/vyatta/share/snmp/mibs';
 my $snmp_conf                   = '/etc/snmp/snmpd.conf';
 my $snmp_client                 = '/etc/snmp/snmp.conf';
@@ -52,7 +54,7 @@ my @trapd_services = ();
 # master implementation?
 sub using_rd_vrf {
     return 1
-        if -f "/proc/self/rtg_domain";
+      if -f "/proc/self/rtg_domain";
     return 0;
 }
 
@@ -62,7 +64,8 @@ sub get_rdid_or_vrfname {
     # Use ID for RD, name for VRF master
     if ( using_rd_vrf() ) {
         return Vyatta::VrfManager::get_vrf_id($vrf);
-    } else {
+    }
+    else {
         return $Vyatta::VrfManager::VRFMASTER_PREFIX . $vrf;
     }
 }
@@ -132,7 +135,7 @@ sub get_description {
     my $description = "unknown";
 
     my $cmd = "/opt/vyatta/bin/opc show version";
-    if ( open(my $cmdout, '-|', "$cmd") ) {
+    if ( open( my $cmdout, '-|', "$cmd" ) ) {
         while (<$cmdout>) {
             chomp;
             if (m/^Description\s*:\s*(.*)$/) {
@@ -167,19 +170,20 @@ sub ipv6_disabled {
 
 # Test if address is local to VRF
 sub is_vrf_local_address {
-    my ($addr, $vrf) = @_;
+    my ( $addr, $vrf ) = @_;
     die "$addr: invalid routing-instance $vrf"
       unless defined($vrf);
-    my $ip   = new NetAddr::IP $addr;
+    my $ip = new NetAddr::IP $addr;
     die "$addr: not a valid IP address"
       unless $ip;
 
     my ( $pf, $sockaddr );
     if ( $ip->version() == 4 ) {
-        $pf = PF_INET;
+        $pf       = PF_INET;
         $sockaddr = sockaddr_in( 0, $ip->aton() );
-    } else {
-        $pf = PF_INET6;
+    }
+    else {
+        $pf       = PF_INET6;
         $sockaddr = sockaddr_in6( 0, $ip->aton() );
     }
 
@@ -188,11 +192,11 @@ sub is_vrf_local_address {
 
     $vrf = "vrf$vrf" if ( $vrf !~ /^vrf/ );
 
-    setsockopt( $sock, SOL_SOCKET, SO_BINDTODEVICE, pack("Z*", $vrf ) )
+    setsockopt( $sock, SOL_SOCKET, SO_BINDTODEVICE, pack( "Z*", $vrf ) )
       or die "setsockopt failed\n";
 
     my $ret = bind( $sock, $sockaddr );
-    close( $sock );
+    close($sock);
     return $ret;
 }
 
@@ -208,12 +212,14 @@ sub validate_listen_address {
 
         #Check if the listen address is a local address
         foreach my $addr (@address) {
-            if ($vrf_available && @vrfs) {
+            if ( $vrf_available && @vrfs ) {
                 my $vrf = shift @vrfs;
                 $vrf = get_rdid_or_vrfname($vrf);
-                die "Non-existent listen address $addr in routing-instance $vrf\n"
-                  unless ( is_vrf_local_address($addr, $vrf) );
-            } else {
+                die
+                  "Non-existent listen address $addr in routing-instance $vrf\n"
+                  unless ( is_vrf_local_address( $addr, $vrf ) );
+            }
+            else {
                 die "Non-existent listen address $addr\n"
                   unless ( is_local_address($addr) );
             }
@@ -224,13 +230,14 @@ sub validate_listen_address {
 # Check if the configured listen routing-instance
 # has valid rdid
 sub validate_listen_routing_instance {
-    if ( $vrf_available ) {
+    if ($vrf_available) {
         $config->setLevel('service snmp routing-instance');
         my @vrfs = $config->returnValues();
         return unless @vrfs;
 
         my $vrf = shift @vrfs;
-        die "Invalid routing-instance to listen on for incoming requests: $vrf\n"
+        die
+          "Invalid routing-instance to listen on for incoming requests: $vrf\n"
           unless ( Vyatta::VrfManager::get_vrf_id($vrf) );
     }
 }
@@ -240,13 +247,14 @@ sub validate_listen_routing_instance {
 sub validate_trap_routing_instance {
     my @trap_targets;
 
-    if ( $vrf_available ) {
+    if ($vrf_available) {
         $config->setLevel($snmp_level);
         @trap_targets = $config->listNodes("trap-target");
         return unless @trap_targets;
 
         foreach my $trap_target (@trap_targets) {
-            my $vrf = $config->returnValue("trap-target $trap_target routing-instance");
+            my $vrf =
+              $config->returnValue("trap-target $trap_target routing-instance");
             next unless defined($vrf);
 
             die "Invalid routing-instance $vrf for trap-target $trap_target\n"
@@ -257,10 +265,12 @@ sub validate_trap_routing_instance {
         return unless @trap_targets;
 
         foreach my $trap_target (@trap_targets) {
-            my $vrf = $config->returnValue("trap-target $trap_target routing-instance");
+            my $vrf =
+              $config->returnValue("trap-target $trap_target routing-instance");
             next unless defined($vrf);
 
-            die "Invalid routing-instance $vrf for v3 trap-target $trap_target\n"
+            die
+              "Invalid routing-instance $vrf for v3 trap-target $trap_target\n"
               unless ( Vyatta::VrfManager::get_vrf_id($vrf) );
         }
     }
@@ -280,34 +290,39 @@ sub get_listen_address {
         foreach my $addr (@address) {
             my $port = $config->returnValue("listen-address $addr port");
             $port = '161' unless $port;
-            next if ($addr eq '127.0.0.1' && $port eq '161');
-            if ($vrf_available && @vrfs) {
+            next if ( $addr eq '127.0.0.1' && $port eq '161' );
+            if ( $vrf_available && @vrfs ) {
                 my $vrf = shift @vrfs;
                 $vrf = get_rdid_or_vrfname($vrf);
                 my $addr_port = transport_syntax( $addr, $port );
                 @listen = ("$addr_port:$vrf");
-            } else {
+            }
+            else {
                 push @listen, transport_syntax( $addr, $port );
             }
         }
 
         # default listener on localhost
-        if ($vrf_available && @vrfs) {
+        if ( $vrf_available && @vrfs ) {
             my $vrf = shift @vrfs;
             $vrf = get_rdid_or_vrfname($vrf);
-            push @listen, join( '', 'udp:', $localhost->addr(), ':161', ':', $vrf );
-        } else {
+            push @listen,
+              join( '', 'udp:', $localhost->addr(), ':161', ':', $vrf );
+        }
+        else {
             push @listen, join( '', 'udp:', $localhost->addr(), ':161' );
-        }    
-    } else {
+        }
+    }
+    else {
 
         # default if no address specified
-        if ($vrf_available && @vrfs) {
+        if ( $vrf_available && @vrfs ) {
             my $vrf = shift @vrfs;
-            $vrf = get_rdid_or_vrfname($vrf);
+            $vrf    = get_rdid_or_vrfname($vrf);
             @listen = ("udp:161:$vrf");
             push @listen, "udp6:161:$vrf" unless ipv6_disabled();
-        } else {
+        }
+        else {
             @listen = ('udp:161');
             push @listen, 'udp6:161' unless ipv6_disabled();
         }
@@ -317,8 +332,8 @@ sub get_listen_address {
 
 sub snmp_get_constants {
     my $description = get_description();
-    my $now     = localtime;
-    my @addr    = get_listen_address();
+    my $now         = localtime;
+    my @addr        = get_listen_address();
 
     # add local unix domain target for use by operational commands
     unshift @addr, $local_agent;
@@ -326,7 +341,7 @@ sub snmp_get_constants {
     print "# autogenerated by vyatta-snmp.pl on $now\n";
     print "sysDescr $description\n";
     print "sysServices 14\n";
-    print "master agentx\n";    # maybe needed by lldpd
+    print "master agentx\n";                     # maybe needed by lldpd
     print "agentXSocket tcp:localhost:705\n";    # setting listening socket.
     print "agentaddress ", join( ',', @addr ), "\n";
     print "agentgroup vyattacfg\n";
@@ -334,13 +349,16 @@ sub snmp_get_constants {
     print "dontLogTCPWrappersConnects true\n";
 
     # Support for NAT MIB (RFC 4008)
-    print "pass_persist .1.3.6.1.2.1.123.1 /opt/vyatta/sbin/vyatta-nat-mib.pl\n";
+    print
+      "pass_persist .1.3.6.1.2.1.123.1 /opt/vyatta/sbin/vyatta-nat-mib.pl\n";
 
     # Support for AT&T QoS MIB
-    print "pass_persist .1.3.6.1.4.1.74.1.32.1 /opt/vyatta/sbin/vyattaqosmib.pl\n";
+    print
+      "pass_persist .1.3.6.1.4.1.74.1.32.1 /opt/vyatta/sbin/vyattaqosmib.pl\n";
 
     # Support for AT&T Storm Control MIB
-    print "pass_persist .1.3.6.1.4.1.74.1.32.4 /opt/vyatta/sbin/vyatta-storm-ctl-mib.pl\n";
+    print
+"pass_persist .1.3.6.1.4.1.74.1.32.4 /opt/vyatta/sbin/vyatta-storm-ctl-mib.pl\n";
 }
 
 # generate a random character hex string
@@ -351,26 +369,26 @@ sub randhex {
 
 # output snmpd.conf file syntax for community
 sub print_community {
-    my ( $community ) = @_;
+    my ($community) = @_;
     $config->setLevel("service snmp community $community");
     my $ro = $config->returnValue('authorization');
     $ro = 'ro' unless $ro;
 
-    my @clients  = $config->returnValues('client');
-    my @networks = $config->returnValues('network');
+    my @clients     = $config->returnValues('client');
+    my @networks    = $config->returnValues('network');
     my @restriction = ( @clients, @networks );
 
-    my $view = $config->returnValue('view');
+    my $view    = $config->returnValue('view');
     my $context = $config->returnValue('context');
 
-    $view = "-V $view" if defined($view);
-    $view = "$view $context" if (defined($view) && defined($context));
+    $view = "-V $view"       if defined($view);
+    $view = "$view $context" if ( defined($view) && defined($context) );
 
     if ( !@restriction ) {
-        my $comm = "community $community";
+        my $comm  = "community $community";
         my $comm6 = "community6 $community";
         if ( defined $view ) {
-            $comm = "$comm default $view";
+            $comm  = "$comm default $view";
             $comm6 = "$comm6 default $view";
         }
         print "$ro$comm\n";
@@ -382,17 +400,19 @@ sub print_community {
         my $ip = new NetAddr::IP $addr;
         die "$addr: Not a valid IP address" unless $ip;
 
-        my $comm = "community $community $addr";
+        my $comm  = "community $community $addr";
         my $comm6 = "community6 $community $addr";
         if ( defined $view ) {
-            $comm = "$comm $view";
+            $comm  = "$comm $view";
             $comm6 = "$comm6 $view";
         }
         if ( $ip->version() == 4 ) {
             print "$ro$comm\n";
-        } elsif ( $ip->version() == 6 ) {
+        }
+        elsif ( $ip->version() == 6 ) {
             print "$ro$comm6\n";
-        } else {
+        }
+        else {
             die "$addr: bad IP version ", $ip->version();
         }
     }
@@ -407,13 +427,13 @@ sub snmp_get_values {
 
     my @communities = $config->listNodes("community");
     foreach my $community (@communities) {
-        print_community( $community );
+        print_community($community);
     }
 
     $config->setLevel($snmp_level);
 
     my $sysobjectid = $config->returnValue("sysobjectid");
-    if ( ! defined $sysobjectid ) {
+    if ( !defined $sysobjectid ) {
         $sysobjectid = get_sysobjectid();
     }
     printf "sysObjectID %s\n", $sysobjectid;
@@ -421,7 +441,8 @@ sub snmp_get_values {
     my $contact = $config->returnValue("contact");
     if ( defined $contact ) {
         print "syscontact \"$contact\" \n";
-    } else {
+    }
+    else {
         print "syscontact Unknown\n";
     }
 
@@ -459,7 +480,7 @@ sub snmp_get_views {
 sub snmp_get_overrides {
     print "# overrides\n";
     $config->setLevel($snmp_level);
-    if (!$config->exists("notification ping all")) {
+    if ( !$config->exists("notification ping all") ) {
         print "override .1.3.6.1.2.1.80.1.2.1.13.3 octet_str \"\"\n";
     }
     print "\n";
@@ -467,16 +488,15 @@ sub snmp_get_overrides {
 
 # write contexts from vyatta config to snmpd_conf
 sub snmp_get_contexts {
-    if ( $vrf_available ) {
-print
-"#contexts\n#             context contextID\n";
+    if ($vrf_available) {
+        print "#contexts\n#             context contextID\n";
         my $rconfig = new Vyatta::Config;
         foreach my $vrf ( $rconfig->listNodes("routing routing-instance") ) {
             my $vrfmaster = get_rdid_or_vrfname($vrf);
             print "context $vrf $vrfmaster\n";
         }
         print "\n";
-     }
+    }
 }
 
 sub get_trap_target_address {
@@ -487,14 +507,16 @@ sub get_trap_target_address {
     my $version = $ip->version();
     if ( $version == 4 ) {
         $addr = "udp:$addr";
-    } elsif ( $version == 6 ) {
+    }
+    elsif ( $version == 6 ) {
         $addr = "udp6:[$addr]";
-    } else {
+    }
+    else {
         die "$addr: unknown IP version $version";
     }
     $port = '162' unless $port;
     $addr = "$addr:$port";
-    $addr = "$addr:$rdid" if ($vrf_available && $rdid);
+    $addr = "$addr:$rdid" if ( $vrf_available && $rdid );
     return $addr;
 }
 
@@ -529,19 +551,19 @@ EOF
           $config->returnValue("trap-target $trap_target community");
         my $addr_vrf;
         my $vrf =
-              $config->returnValue("trap-target $trap_target routing-instance");
+          $config->returnValue("trap-target $trap_target routing-instance");
         $addr_vrf = get_rdid_or_vrfname($vrf)
-            if $vrf_available && defined($vrf);
+          if $vrf_available && defined($vrf);
 
-        my $addr = get_trap_target_address($trap_target, $port, $addr_vrf);
+        my $addr = get_trap_target_address( $trap_target, $port, $addr_vrf );
         print "trap2sink";
-        print " -n $vrf"     if ($vrf_available && $vrf);
+        print " -n $vrf" if ( $vrf_available && $vrf );
         print " $addr";
         print " $community" if $community;
         print "\n";
     }
 
-    if ($config->exists("notification-to-syslog enable")) {
+    if ( $config->exists("notification-to-syslog enable") ) {
         print "\ntrap2sink udp:localhost:162 __internal__\n\n";
         $need_trapd = 1;
     }
@@ -549,7 +571,8 @@ EOF
     my $trapd_status;
     if ($need_trapd) {
         $trapd_status = "TRAPDRUN=yes";
-    } else {
+    }
+    else {
         $trapd_status = "TRAPDRUN=no";
     }
 
@@ -571,11 +594,13 @@ EOF
           or die "Couldn't open /etc/snmp/snmptrapd.conf - $!";
         print $fh "authCommunity execute __internal__\n";
         my $facility = $config->returnValue("notification-to-syslog facility");
-        my $level = $config->returnValue("notification-to-syslog level");
-        print $fh "traphandle default /opt/vyatta/sbin/notification-to-syslog -p $facility.$level\n";
+        my $level    = $config->returnValue("notification-to-syslog level");
+        print $fh
+"traphandle default /opt/vyatta/sbin/notification-to-syslog -p $facility.$level\n";
         close $fh;
         system("systemctl restart snmptrapd > /dev/null 2>&1");
-    } else {
+    }
+    else {
         system("systemctl stop snmptrapd > /dev/null 2>&1");
     }
 }
@@ -586,7 +611,7 @@ sub snmp_client_config {
     open( my $cf, '>', $snmp_client )
       or die "Couldn't open $snmp_client - $!";
 
-    my $now     = localtime;
+    my $now = localtime;
     print {$cf} "# autogenerated by vyatta-snmp.pl on $now\n";
 
     my $trap_source = $config->returnValue('trap-source');
@@ -630,13 +655,14 @@ sub snmp_get_storm_control_trap {
 
     if ( $config->exists("notification storm-control") ) {
         system("systemctl start vyatta-storm-ctl-notifier");
-    } else {
+    }
+    else {
         system("systemctl stop vyatta-storm-ctl-notifier");
     }
 }
 
 # Start the service to monitor Buffer congestion.
-sub snmp_get_buffer_congestion{
+sub snmp_get_buffer_congestion {
     system("systemctl start vyatta-buffer-congestion-notifier");
 }
 
@@ -653,7 +679,8 @@ sub snmp_get_sensortrap {
       if ( $config->exists("notification entity-state all") );
     if ( scalar(@args) == 0 ) {
         unlink($notifications_args_file);
-    } else {
+    }
+    else {
         open( my $fh, '>', $notifications_args_file )
           or die "Couldn't open $notifications_args_file - $!";
         foreach my $arg (@args) {
@@ -686,39 +713,43 @@ sub snmp_get_disablesnmpv3 {
 
 sub snmp_trapd_service_start_stop {
     $config->setLevel($snmp_level);
-    if ( $config->exists("description") &&
-            $config->exists("trap-target") ) {
+    if (   $config->exists("description")
+        && $config->exists("trap-target") )
+    {
         my $inifile = Config::IniFiles->new();
         unless ( defined $inifile->SetFileName($trapd_cfg) ) {
             print "Error opening new Config::IniFiles $trapd_cfg";
             return;
-        };
+        }
 
         my @default_communities = $config->listNodes('community');
         if ( scalar @default_communities != 0 ) {
-            $inifile->newval('general', 'community', join(" ", @default_communities));
+            $inifile->newval( 'general', 'community',
+                join( " ", @default_communities ) );
         }
 
         my $descr = $config->returnValue('description');
-        $inifile->newval('general', 'description', $descr);
+        $inifile->newval( 'general', 'description', $descr );
 
         my $source = $config->returnValue('trap-source');
         if ( defined $source ) {
-            $inifile->newval('general', 'trap-source', $source);
+            $inifile->newval( 'general', 'trap-source', $source );
         }
 
         my @targets = $config->listNodes('trap-target');
 
         foreach my $target (@targets) {
-            $inifile->newval("trap-target $target", 'address', $target);
+            $inifile->newval( "trap-target $target", 'address', $target );
 
             my $port = $config->returnValue("trap-target $target port");
             if ( defined $port ) {
-                $inifile->newval("trap-target $target", 'port', $port);
+                $inifile->newval( "trap-target $target", 'port', $port );
             }
 
-            my $community = $config->returnValue("trap-target $target community");
-            if (! defined $community) {
+            my $community =
+              $config->returnValue("trap-target $target community");
+            if ( !defined $community ) {
+
                 # If there is only one global community, then that's an
                 # unambiguous default. If there are multiple ones, then
                 # one needs to be explicitly bound to the trap-target(s).
@@ -726,8 +757,10 @@ sub snmp_trapd_service_start_stop {
                     print "Need community set for trap-target $target";
                     next;
                 }
-            } else {
-                $inifile->newval("trap-target $target", 'community', $community);
+            }
+            else {
+                $inifile->newval( "trap-target $target",
+                    'community', $community );
             }
         }
 
@@ -740,7 +773,8 @@ sub snmp_trapd_service_start_stop {
         for my $service (@trapd_services) {
             system("systemctl restart $service > /dev/null 2>&1");
         }
-    } else {
+    }
+    else {
         unlink($trapd_cfg);
         for my $service (@trapd_services) {
             system("systemctl stop $service > /dev/null 2>&1");
@@ -752,17 +786,20 @@ sub snmp_trapd_service_start_stop {
 # If we can't determine one, fall back to the default.
 
 sub get_sysobjectid {
-    my $what_am_i = `/opt/vyatta/bin/vyatta-platform-util --what-am-i`;
+    my $what_am_i   = `/opt/vyatta/bin/vyatta-platform-util --what-am-i`;
     my $sysobjectid = $default_sysobjectid;
 
     chomp($what_am_i);
-    if ($what_am_i eq "att.flexware-xs") {
+    if ( $what_am_i eq "att.flexware-xs" ) {
         $sysobjectid = '1.3.6.1.4.1.74.1.31.1';
-    } elsif ($what_am_i eq "att.flexware-s") {
+    }
+    elsif ( $what_am_i eq "att.flexware-s" ) {
         $sysobjectid = '1.3.6.1.4.1.74.1.31.2';
-    } elsif ($what_am_i eq "att.flexware-m") {
+    }
+    elsif ( $what_am_i eq "att.flexware-m" ) {
         $sysobjectid = '1.3.6.1.4.1.74.1.31.3';
-    } elsif ($what_am_i eq "att.flexware-l") {
+    }
+    elsif ( $what_am_i eq "att.flexware-l" ) {
         $sysobjectid = '1.3.6.1.4.1.74.1.31.4';
     }
 
