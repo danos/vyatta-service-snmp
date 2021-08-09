@@ -23,6 +23,9 @@ my $ipMIBipAddressOrigin_oid = '.1.3.6.1.2.1.4.34.1.6';
 # OID of ipAddressOrigin [RFC4293]
 my $ipMIBipSystemStatsTable_oid = '.1.3.6.1.2.1.4.31.1.1';
 
+my $SUBAGENT = 'vyatta-snmp-subagent';
+my $STATS_FILE = "/run/snmpd/$SUBAGENT/ipSystemStats";
+
 my $snmp_subagent;
 
 use constant IPADDRORIGIN_REFRESH  => 120;    # seconds
@@ -128,19 +131,19 @@ sub populate_ipAddressOrigin {
 }
 
 sub populate_ipSystemStats {
-    system( "/opt/vyatta/sbin/vplane-snmp", "-p", "/tmp/ipSystemStats" );
-    if ( open( my $fh, '<', '/tmp/ipSystemStats' ) ) {
+    system( "/opt/vyatta/sbin/vplane-snmp", "-p", $STATS_FILE );
+    if ( open( my $fh, '<', $STATS_FILE ) ) {
         while ( my $line = <$fh> ) {
             chomp($line);
             my ( $oid, $type, $value ) = split / /, $line;
             $snmp_subagent->add_tree_entry( $oid, $stats_type{$type}, $value );
         }
         close($fh);
-        unlink("/tmp/ipSystemStats");
+        unlink($STATS_FILE);
     }
 }
 
-$snmp_subagent = Vyatta::SNMPSubagent->new("vyatta-snmp-subagent");
+$snmp_subagent = Vyatta::SNMPSubagent->new($SUBAGENT);
 
 $snmp_subagent->register_oid( $ipMIBipAddressOrigin_oid,
     \&populate_ipAddressOrigin, IPADDRORIGIN_REFRESH );
