@@ -184,14 +184,6 @@ my $send_entity_state_traps  = 0;
 
 my %last_saved_state = ();
 
-my $fh2;
-
-sub debug {
-    my @msg = @_;
-    print $fh2 scalar localtime(), ":  ", @msg, "\n";
-    return;
-}
-
 sub trim {
     my ($string) = @_;
 
@@ -648,10 +640,6 @@ sub send_traps {
             || defined($selmgmt_mode) )
       );
     return 0;
-}
-
-if ( open( $fh2, '>', '/tmp/entity-sensor-ipmi.log' ) ) {
-    autoflush $fh2 1;
 }
 
 if ( open( my $fh, '<', $NOTIFICATIONS_ARGS_FILE ) ) {
