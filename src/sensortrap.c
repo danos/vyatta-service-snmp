@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <poll.h>
 #include <errno.h>
+#include <unistd.h>
 
 #define MODULE_NAME "sensortrap"
 
