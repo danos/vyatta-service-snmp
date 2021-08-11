@@ -1,3 +1,14 @@
+vyatta-service-snmp (0.51) unstable; urgency=medium
+
+  [ Sharmila Podury ]
+  * Insecure temporary file usage in Vyatta SNMP agent
+  * Insecure temporary file usage
+
+  [ Daniel Gollub ]
+  * Add missing include to to fix build on Debian Bullseye
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Wed, 11 Aug 2021 10:21:32 -0700
+
 vyatta-service-snmp (0.50) unstable; urgency=medium
 
   * Restart reason log is noisy
