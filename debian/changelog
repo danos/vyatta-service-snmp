@@ -1,3 +1,13 @@
+vyatta-service-snmp (0.52) unstable; urgency=medium
+
+  * Perltidy on vyatta-snmp.pl
+  * SNMP Listening on multiple VRFs
+  * Replace perl format with printf
+  * Perltidy on vyatta-show-snmp.pl
+  * Opmode command support for multiple VRFs
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Mon, 23 Aug 2021 10:49:25 -0700
+
 vyatta-service-snmp (0.51) unstable; urgency=medium
 
   [ Sharmila Podury ]
