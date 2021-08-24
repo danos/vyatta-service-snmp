@@ -14,8 +14,11 @@ use strict;
 use warnings;
 use Getopt::Long;
 use NetAddr::IP;
-use Vyatta::Misc;
 use Module::Load::Conditional qw[can_load];
+
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::Misc;
+use Vyatta::SNMPMisc;
 
 my $vrf_available = can_load(
     modules  => { "Vyatta::VrfManager" => undef },
@@ -58,7 +61,7 @@ sub show_all {
 
     # Source community strings from configd to
     # ensure redaction as required.
-    foreach my $comm ( listNodes("community") ) {
+    foreach my $comm ( listNodes( "", "community", "tagnode" ) ) {
         $results = join( ' ', $results, $comm );
     }
 
@@ -98,7 +101,7 @@ sub show_mib {
     my $clientaddr = get_clientaddr();
     my $cmd        = "";
     if ($vrf_available) {
-        my @vrfs = returnValues("routing-instance");
+        my @vrfs = returnValues( "", "routing-instance" );
         if (@vrfs) {
             my $vrf = shift @vrfs;
             $cmd = "chvrf $vrf";
@@ -132,7 +135,7 @@ sub status_v3 {
 
     my @status_cmd;
     if ($vrf_available) {
-        my @vrfs = returnValues("routing-instance");
+        my @vrfs = returnValues( "", "routing-instance" );
         if (@vrfs) {
             my $vrf = shift @vrfs;
             @status_cmd = ( 'chvrf', "$vrf" );
@@ -165,7 +168,7 @@ sub status {
 
     my @status_cmd;
     if ($vrf_available) {
-        my @vrfs = returnValues("routing-instance");
+        my @vrfs = returnValues( "", "routing-instance" );
         if (@vrfs) {
             my $vrf = shift @vrfs;
             @status_cmd = ( 'chvrf', "$vrf" );
@@ -177,34 +180,14 @@ sub status {
     die "Can't exec $SNMPSTATUS : $!";
 }
 
-sub listNodes {
-    my $path = shift;
-    my @nodes =
-      split( ' ', `cli-shell-api listActiveNodes service snmp $path` );
-    return map { substr $_, 1, -1 } @nodes;
-}
-
-sub returnValue {
-    my $path  = shift;
-    my $value = `cli-shell-api returnActiveValue service snmp $path`;
-    return $value;
-}
-
-sub returnValues {
-    my $path = shift;
-    my @values =
-      split( ' ', `cli-shell-api returnActiveValues service snmp $path` );
-    return map { substr $_, 1, -1 } @values;
-}
-
 sub show_mapping {
     print("\n\nSNMPv1/v2c Community/Context Mapping:\n\n");
     print("Community                   Context\n");
     print("---------                   -------\n");
 
-    foreach my $comm ( listNodes("community") ) {
-        my $context = returnValue("community $comm context");
-        $context = "\'default\'" unless $context;
+    foreach my $comm ( listNodes( "", "community", "tagnode" ) ) {
+        my $context = returnValue( "community $comm", "context" );
+        $context = 'default' unless $context;
         printf( "%-28s%s\n", $comm, $context );
     }
     print "\n";
@@ -217,9 +200,8 @@ sub print_listen_address {
     if ( defined($laddrs) ) {
         my $start = 0;
         foreach my $addr (@$laddrs) {
-            my $port = returnValue("listen-address $addr port");
+            my $port = returnValue( "listen-address $addr", "port" );
             $port = '161' unless $port;
-            $port =~ tr/'//d;
             if ( $start == 0 ) {
                 printf( "%-28s%-7d%-7s%s\n", $vrf, $rdid, $port, $addr );
                 $start = 1;
@@ -236,16 +218,11 @@ sub print_listen_address {
 
 sub get_vrf_addrs {
     my $laddrs;
-    my @addrs = returnValues("listen-address");
+    my @addrs = listNodes( "", "listen-address", "tagnode" );
     foreach my $addr (@addrs) {
-        my $vrf = returnValue("listen-address $addr routing-instance");
-        if ( defined($vrf) && $vrf ne "" ) {
-            $vrf =~ tr/'//d;
-            push @{ $laddrs->{$vrf} }, $addr;
-        }
-        else {
-            push @{ $laddrs->{'default'} }, $addr;
-        }
+        my $vrf = returnValue( "listen-address $addr", "routing-instance" );
+        $vrf = 'default' unless $vrf;
+        push @{ $laddrs->{$vrf} }, $addr;
     }
     return $laddrs;
 }
@@ -258,7 +235,7 @@ sub show_routing_instance {
     print("-----------------           ----   ----   --------------\n");
 
     my $vaddrs = get_vrf_addrs();
-    my @vrfs   = returnValues("routing-instance");
+    my @vrfs   = returnValues( "", "routing-instance" );
     foreach my $vrf (@vrfs) {
         push @{ $vaddrs->{$vrf} }, "" unless ( exists $vaddrs->{$vrf} );
     }
@@ -276,9 +253,9 @@ sub show_trap {
     print("Trap-target                   Port   Community\n");
     print("-----------                   ----   ---------\n");
 
-    foreach my $target ( listNodes("trap-target") ) {
-        my $port = returnValue("trap-target $target port");
-        my $comm = returnValue("trap-target $target community");
+    foreach my $target ( listNodes( "", "trap-target", "tagnode" ) ) {
+        my $port = returnValue( "trap-target $target", "port" );
+        my $comm = returnValue( "trap-target $target", "community" );
         if ( length($target) >= 30 ) {
             printf( "%s\n%30s%-7s%s\n", $target, "", $port, $comm );
         }
@@ -294,11 +271,11 @@ sub show_routing_instance_trap {
     print("Trap-target                   Port   Routing-Instance Community\n");
     print("-----------                   ----   ---------------- ---------\n");
 
-    foreach my $target ( listNodes("trap-target") ) {
-        my $port = returnValue("trap-target $target port");
-        my $comm = returnValue("trap-target $target community");
-        my $vrf  = returnValue("trap-target $target routing-instance");
-        $vrf = "\'default\'" unless $vrf;
+    foreach my $target ( listNodes( "", "trap-target", "tagnode" ) ) {
+        my $port = returnValue( "trap-target $target", "port" );
+        my $comm = returnValue( "trap-target $target", "community" );
+        my $vrf  = returnValue( "trap-target $target", "routing-instance" );
+        $vrf = 'default' unless $vrf;
         if ( length($target) >= 30 ) {
             printf( "%s\n%30s%-7s%-17s%s\n", $target, "", $port, $vrf, $comm );
         }

@@ -52,6 +52,7 @@ Breaks: vyatta-service-snmp (<< 0.42)
 Replaces: vyatta-service-snmp (<< 0.42)
 Depends:
  libsnmp-perl,
+ libvyatta-cfgclient-perl,
  ${perl:Depends},
 Description: SNMP helper Perl modules
  Provides the Vyatta/Subagent.pm and Vyatta/MIBMisc.pm modules

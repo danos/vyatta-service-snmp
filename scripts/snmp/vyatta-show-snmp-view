@@ -1,52 +1,31 @@
 #! /usr/bin/perl
 #
-# Copyright (c) 2017-2019 AT&T Intellectual Property.
+# Copyright (c) 2017-2021 AT&T Intellectual Property.
 # Copyright (c) 2015-2016 by Brocade Communications Systems, Inc.
 # All rights reserved.
 #
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
-
 use strict;
 use warnings;
 use Getopt::Long;
 
-sub listNodes {
-    my $path = shift;
-    my @nodes =
-      split( ' ', `cli-shell-api listActiveNodes service snmp $path` );
-    return map { substr $_, 1, -1 } @nodes;
-}
-
-sub returnValue {
-    my $path  = shift;
-    my $value = `cli-shell-api returnActiveValue service snmp $path`;
-    return $value;
-}
-
-sub isExists {
-    my $path = shift;
-    system("cli-shell-api existsActive service snmp $path");
-    return !$?;
-}
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::SNMPMisc;
 
 sub show_view {
-    print <<END;
+    print("\n\nSNMP Views:\n\n");
 
-SNMP Views:
-
-END
-
-    foreach my $view ( listNodes("view") ) {
+    foreach my $view ( listNodes( "", "view", "tagnode" ) ) {
         print "View : $view\nOIDs :\n";
-        foreach my $oid ( listNodes("view $view oid") ) {
+        foreach my $oid ( listNodes( "view $view", "oid", "tagnode" ) ) {
             my $exclude = '';
             $exclude = ' exclude'
               if ( isExists("view $view oid $oid exclude") );
             my $mask = '';
             if ( isExists("view $view oid $oid mask") ) {
-                my $value = returnValue("view $view oid $oid mask");
+                my $value = returnValue( "view $view oid $oid", "mask" );
                 $mask = " mask $value";
             }
             print "       .$oid$exclude$mask\n";
