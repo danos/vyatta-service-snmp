@@ -9,6 +9,7 @@ use warnings;
 
 use lib "/opt/vyatta/share/perl5/";
 use Vyatta::Config;
+use Vyatta::SNMPListen;
 
 
 my $config = new Vyatta::Config;
@@ -52,6 +53,7 @@ sub check_v2_relation {
 # can be called directly
 sub snmp_v2_check {
     check_v2_relation();
+    validate_listen_address();
 }
 
 # check changes in auth and privacy nodes

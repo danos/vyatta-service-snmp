@@ -16,7 +16,6 @@ use strict;
 use warnings;
 
 use lib "/opt/vyatta/share/perl5/";
-use Module::Load::Conditional qw[can_load];
 use Vyatta::Config;
 use Vyatta::Misc;
 use NetAddr::IP;
@@ -25,11 +24,9 @@ use File::Copy;
 use Socket;
 use Socket6;
 use Config::IniFiles;
+use Vyatta::SNMPListen;
+use Data::Dumper;
 
-use constant SO_BINDTODEVICE => 25;
-
-my $vrf_available = can_load( modules => { "Vyatta::VrfManager" => undef },
-    autoload => "true" );
 my $mibdir                      = '/opt/vyatta/share/snmp/mibs';
 my $snmp_conf                   = '/etc/snmp/snmpd.conf';
 my $snmp_client                 = '/etc/snmp/snmp.conf';
@@ -47,25 +44,6 @@ my $config = new Vyatta::Config;
 my $snmp_level = 'service snmp';
 
 my @trapd_services = ();
-
-# Are we using routing-domain VRF implementation, as opposed to VRF
-# master implementation?
-sub using_rd_vrf {
-    return 1
-        if -f "/proc/self/rtg_domain";
-    return 0;
-}
-
-sub get_rdid_or_vrfname {
-    my $vrf = shift;
-
-    # Use ID for RD, name for VRF master
-    if ( using_rd_vrf() ) {
-        return Vyatta::VrfManager::get_vrf_id($vrf);
-    } else {
-        return $Vyatta::VrfManager::VRFMASTER_PREFIX . $vrf;
-    }
-}
 
 sub snmp_running {
     open( my $pidf, '<', "/var/run/snmpd.pid" )
@@ -88,16 +66,6 @@ sub snmp_stop {
 
 sub snmp_start {
 
-    #validating the routing-instance to listen on for
-    # incoming requests
-    validate_listen_routing_instance() if $vrf_available;
-
-    #validating the listen address
-    validate_listen_address();
-
-    #validating routing-instance for trap-targets
-    validate_trap_routing_instance() if $vrf_available;
-
     # we must stop snmpd first for creating vyatta user
     system("systemctl stop snmpd > /dev/null 2>&1");
     open( my $fh, '>', $snmp_tmp )
@@ -109,7 +77,7 @@ sub snmp_start {
     snmp_get_constants();
     snmp_get_values();
     snmp_get_disablesnmpv3();
-    snmp_get_contexts() if $vrf_available;
+    snmp_get_contexts() if is_vrf_available();
     snmp_get_authtrap();
     snmp_get_traps();
     snmp_get_views();
@@ -165,151 +133,41 @@ sub ipv6_disabled {
     return;
 }
 
-# Test if address is local to VRF
-sub is_vrf_local_address {
-    my ($addr, $vrf) = @_;
-    die "$addr: invalid routing-instance $vrf"
-      unless defined($vrf);
-    my $ip   = new NetAddr::IP $addr;
-    die "$addr: not a valid IP address"
-      unless $ip;
-
-    my ( $pf, $sockaddr );
-    if ( $ip->version() == 4 ) {
-        $pf = PF_INET;
-        $sockaddr = sockaddr_in( 0, $ip->aton() );
-    } else {
-        $pf = PF_INET6;
-        $sockaddr = sockaddr_in6( 0, $ip->aton() );
-    }
-
-    socket( my $sock, $pf, SOCK_STREAM, 0 )
-      or die "socket failed\n";
-
-    $vrf = "vrf$vrf" if ( $vrf !~ /^vrf/ );
-
-    setsockopt( $sock, SOL_SOCKET, SO_BINDTODEVICE, pack("Z*", $vrf ) )
-      or die "setsockopt failed\n";
-
-    my $ret = bind( $sock, $sockaddr );
-    close( $sock );
-    return $ret;
-}
-
-# Check if the configured listen address
-# is present on the system
-sub validate_listen_address {
-    $config->setLevel('service snmp');
-    my @vrfs = $config->returnValues('routing-instance') if $vrf_available;
-    $config->setLevel('service snmp listen-address');
-    my @address = $config->listNodes();
-
-    if (@address) {
-
-        #Check if the listen address is a local address
-        foreach my $addr (@address) {
-            if ($vrf_available && @vrfs) {
-                my $vrf = shift @vrfs;
-                $vrf = get_rdid_or_vrfname($vrf);
-                die "Non-existent listen address $addr in routing-instance $vrf\n"
-                  unless ( is_vrf_local_address($addr, $vrf) );
-            } else {
-                die "Non-existent listen address $addr\n"
-                  unless ( is_local_address($addr) );
-            }
-        }
-    }
-}
-
-# Check if the configured listen routing-instance
-# has valid rdid
-sub validate_listen_routing_instance {
-    if ( $vrf_available ) {
-        $config->setLevel('service snmp routing-instance');
-        my @vrfs = $config->returnValues();
-        return unless @vrfs;
-
-        my $vrf = shift @vrfs;
-        die "Invalid routing-instance to listen on for incoming requests: $vrf\n"
-          unless ( Vyatta::VrfManager::get_vrf_id($vrf) );
-    }
-}
-
-# Check if the configured trap target routing-instance
-# has valid rdid
-sub validate_trap_routing_instance {
-    my @trap_targets;
-
-    if ( $vrf_available ) {
-        $config->setLevel($snmp_level);
-        @trap_targets = $config->listNodes("trap-target");
-        return unless @trap_targets;
-
-        foreach my $trap_target (@trap_targets) {
-            my $vrf = $config->returnValue("trap-target $trap_target routing-instance");
-            next unless defined($vrf);
-
-            die "Invalid routing-instance $vrf for trap-target $trap_target\n"
-              unless ( Vyatta::VrfManager::get_vrf_id($vrf) );
-        }
-
-        @trap_targets = $config->listNodes("v3 trap-target");
-        return unless @trap_targets;
-
-        foreach my $trap_target (@trap_targets) {
-            my $vrf = $config->returnValue("trap-target $trap_target routing-instance");
-            next unless defined($vrf);
-
-            die "Invalid routing-instance $vrf for v3 trap-target $trap_target\n"
-              unless ( Vyatta::VrfManager::get_vrf_id($vrf) );
-        }
-    }
-}
-
 # Find SNMP agent listening addresses
 sub get_listen_address {
     my @listen;
-    my @vrfs;
-    my $localhost = new NetAddr::IP('localhost');
-
-    $config->setLevel($snmp_level);
-    @vrfs = $config->returnValues('routing-instance') if $vrf_available;
-    my @address = $config->listNodes('listen-address');
-
-    if (@address) {
-        foreach my $addr (@address) {
-            my $port = $config->returnValue("listen-address $addr port");
-            $port = '161' unless $port;
-            next if ($addr eq '127.0.0.1' && $port eq '161');
-            if ($vrf_available && @vrfs) {
-                my $vrf = shift @vrfs;
-                $vrf = get_rdid_or_vrfname($vrf);
-                my $addr_port = transport_syntax( $addr, $port );
-                @listen = ("$addr_port:$vrf");
-            } else {
-                push @listen, transport_syntax( $addr, $port );
+    if ( !get_routing_instances && !get_listen_addresses() ) {
+        push @listen, "udp:161";
+        push @listen, "udp6:161" unless ipv6_disabled();
+        return @listen;
+    }
+    my $listen_addrs = get_all_listen_addresses();
+    foreach my $addr (@$listen_addrs) {
+        my $listen_address = $addr->{'address'};
+        if ($listen_address) {
+            my $addr_port =
+              transport_syntax( $listen_address, $addr->{'port'} );
+            foreach my $intf ( @{ $addr->{'listen_interface'} } ) {
+                if ( $intf eq "default" ) {
+                    $intf = "";
+                }
+                else {
+                    $intf = ":$intf";
+                }
+                push @listen, "$addr_port$intf";
             }
         }
-
-        # default listener on localhost
-        if ($vrf_available && @vrfs) {
-            my $vrf = shift @vrfs;
-            $vrf = get_rdid_or_vrfname($vrf);
-            push @listen, join( '', 'udp:', $localhost->addr(), ':161', ':', $vrf );
-        } else {
-            push @listen, join( '', 'udp:', $localhost->addr(), ':161' );
-        }    
-    } else {
-
-        # default if no address specified
-        if ($vrf_available && @vrfs) {
-            my $vrf = shift @vrfs;
-            $vrf = get_rdid_or_vrfname($vrf);
-            @listen = ("udp:161:$vrf");
-            push @listen, "udp6:161:$vrf" unless ipv6_disabled();
-        } else {
-            @listen = ('udp:161');
-            push @listen, 'udp6:161' unless ipv6_disabled();
+        else {
+            foreach my $intf ( @{ $addr->{'listen_interface'} } ) {
+                if ( $intf eq "default" ) {
+                    $intf = "";
+                }
+                else {
+                    $intf = ":$intf";
+                }
+                push @listen, "udp:161$intf";
+                push @listen, "udp6:161$intf" unless ipv6_disabled();
+            }
         }
     }
     return @listen;
@@ -317,8 +175,8 @@ sub get_listen_address {
 
 sub snmp_get_constants {
     my $description = get_description();
-    my $now     = localtime;
-    my @addr    = get_listen_address();
+    my $now         = localtime;
+    my @addr        = get_listen_address();
 
     # add local unix domain target for use by operational commands
     unshift @addr, $local_agent;
@@ -329,6 +187,8 @@ sub snmp_get_constants {
     print "master agentx\n";    # maybe needed by lldpd
     print "agentXSocket tcp:localhost:705\n";    # setting listening socket.
     print "agentaddress ", join( ',', @addr ), "\n";
+    print "addressRetries 12\n";
+    print "addressTimeout 5\n";
     print "agentgroup vyattacfg\n";
     print "agentXTimeout 5\n";
     print "dontLogTCPWrappersConnects true\n";
@@ -467,9 +327,8 @@ sub snmp_get_overrides {
 
 # write contexts from vyatta config to snmpd_conf
 sub snmp_get_contexts {
-    if ( $vrf_available ) {
-print
-"#contexts\n#             context contextID\n";
+    if ( is_vrf_available() ) {
+        print "#contexts\n#             context contextID\n";
         my $rconfig = new Vyatta::Config;
         foreach my $vrf ( $rconfig->listNodes("routing routing-instance") ) {
             my $vrfmaster = get_rdid_or_vrfname($vrf);
@@ -494,7 +353,7 @@ sub get_trap_target_address {
     }
     $port = '162' unless $port;
     $addr = "$addr:$port";
-    $addr = "$addr:$rdid" if ($vrf_available && $rdid);
+    $addr = "$addr:$rdid" if ( is_vrf_available() && $rdid );
     return $addr;
 }
 
@@ -531,11 +390,11 @@ EOF
         my $vrf =
               $config->returnValue("trap-target $trap_target routing-instance");
         $addr_vrf = get_rdid_or_vrfname($vrf)
-            if $vrf_available && defined($vrf);
+          if is_vrf_available() && defined($vrf);
 
         my $addr = get_trap_target_address($trap_target, $port, $addr_vrf);
         print "trap2sink";
-        print " -n $vrf"     if ($vrf_available && $vrf);
+        print " -n $vrf" if ( is_vrf_available() && $vrf );
         print " $addr";
         print " $community" if $community;
         print "\n";
