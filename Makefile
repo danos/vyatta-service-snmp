@@ -38,7 +38,8 @@ install:
 		lib/Vyatta/IFMib.pm \
 		lib/Vyatta/MIBMisc.pm \
 		lib/Vyatta/SNMPSubagent.pm \
-		lib/Vyatta/SNMPMisc.pm
+		lib/Vyatta/SNMPMisc.pm \
+		lib/Vyatta/SNMPListen.pm
 	mkdir -p $(DESTDIR)/opt/vyatta/share/tmplscripts
 	cd tmplscripts && $(cpiop) $(DESTDIR)/opt/vyatta/share/tmplscripts
 	mkdir -p $(DESTDIR)/usr/share/configd/yang
