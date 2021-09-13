@@ -8,6 +8,7 @@
 use strict;
 use warnings;
 use IPC::Run3;
+use Sys::Syslog;
 
 use lib "/opt/vyatta/share/perl5/";
 use Vyatta::RebootReason;
@@ -47,6 +48,8 @@ sub check_and_send_trap {
         return -1;
     }
     save_rr_log_file();
+    my $rr = get_last_reboot_reason();
+    syslog( 'info', "Last Reboot: $rr");
     return 0;
 }
 
