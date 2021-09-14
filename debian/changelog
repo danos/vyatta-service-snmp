@@ -1,3 +1,11 @@
+vyatta-service-snmp (0.53) unstable; urgency=medium
+
+  * Inconsistent use of quotes in SNMP show commands' output
+  * syslog last reboot reason
+  * SIAD fails to start SNMP service once it reboots
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Tue, 14 Sep 2021 13:41:38 -0700
+
 vyatta-service-snmp (0.52) unstable; urgency=medium
 
   * Perltidy on vyatta-snmp.pl
