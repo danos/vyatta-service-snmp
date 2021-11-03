@@ -38,7 +38,6 @@ def filter(facility, level):
 def update(tree):
     configfile = open(CONFIG_FILE + '.tmp', 'w')
     configfile.write('# SYSLOG to SNMP notifications\n')
-    configfile.write('module (load="omprog")\n')
     configfile.write('$template omrfc5676,"%syslogfacility%,%syslogpriority%,%programname%,%timestamp%,%source%,%syslogtag%,%msg%\\n"\n')
     configfile.write((','.join(filter(x['facility'], x['level']) for x in tree['syslog']['filters'])),)
     configfile.write(' action(type="omprog" binary="/opt/vyatta/sbin/omrfc5676" template="omrfc5676")\n')
