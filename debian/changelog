@@ -1,3 +1,10 @@
+vyatta-service-snmp (0.54) unstable; urgency=medium
+
+  * Remove the RDID output from snmp show command
+  * Remove omprog module load from SNMP
+
+ -- Sharmila Podury <sharmila.podury@att.com>  Mon, 22 Nov 2021 09:29:06 -0800
+
 vyatta-service-snmp (0.53) unstable; urgency=medium
 
   * Inconsistent use of quotes in SNMP show commands' output
